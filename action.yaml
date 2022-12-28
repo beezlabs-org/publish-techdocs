@@ -1,0 +1,76 @@
+name: Publish Techdocs
+description: Action to build and publish techdocs
+inputs:
+  entity-name:
+    description: Name of the entity in the catalog-info.yaml
+    required: true
+  entity-kind:
+    description: Kind of the entity in the catalog-info.yaml
+    required: false
+    default: Component
+  entity-namespace:
+    description: Namespace of the entity in the catalog-info.yaml
+    required: false
+    default: default
+  azure-container-name:
+    description: Name of the Azure container where the techdocs will be published
+    required: false
+    default: techdocs
+  azure-storage-account-name:
+    description: Name of the Azure storage account where the techdocs will be published
+    required: false
+    default: beezinternal
+  azure-tenant-id:
+    description: Tenant ID of the Azure storage account where the techdocs will be published
+    required: false
+    default: c841f8a8-bd5c-4fef-812b-be529c35e6b0
+  azure-client-id:
+    description: Client ID of the Azure storage account where the techdocs will be published
+    required: true
+  azure-client-secret:
+    description: Client secret of the Azure storage account where the techdocs will be published
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Setup Node
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install techdocs-cli
+      run: |
+        npm i -g @techdocs/cli
+      shell: bash
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install mkdocs and mkdocs plugins
+      run: |
+        pip install mkdocs-techdocs-core==1.*
+      shell: bash
+
+    - name: Generate docs
+      run: |
+        techdocs-cli generate --no-docker --verbose
+      shell: bash
+
+    - name: Publish docs
+      env: 
+        AZURE_TENANT_ID: ${{ inputs.azure-tenant-id }}
+        AZURE_CLIENT_ID: ${{ inputs.azure-client-id }}
+        AZURE_CLIENT_SECRET: ${{ inputs.azure-client-secret }}
+      run: |
+        techdocs-cli publish \
+        --publisher-type azureBlobStorage \
+        --storage-name ${{ inputs.azure-container-name }} \
+        --azureAccountName ${{ inputs.azure-storage-account-name }} \
+        --entity ${{ inputs.entity-namespace }}/${{ inputs.entity-kind }}/${{ inputs.entity-name }}
+      shell: bash
+
