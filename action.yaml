@@ -1,17 +1,6 @@
 name: Publish Techdocs
 description: Action to build and publish techdocs
 inputs:
-  entity-name:
-    description: Name of the entity in the catalog-info.yaml
-    required: true
-  entity-kind:
-    description: Kind of the entity in the catalog-info.yaml
-    required: false
-    default: Component
-  entity-namespace:
-    description: Namespace of the entity in the catalog-info.yaml
-    required: false
-    default: default
   azure-container-name:
     description: Name of the Azure container where the techdocs will be published
     required: false
@@ -61,6 +50,13 @@ runs:
         techdocs-cli generate --no-docker --verbose
       shell: bash
 
+    - name: Get Entity Information
+      run: |
+        echo "ENTITY_NAME=$(yq '.metadata.name' ./catalog-info.yaml)" >> $GITHUB_ENV
+        echo "ENTITY_NAMESPACE=$(yq '.metadata.namespace' ./catalog-info.yaml | sed 's/^null$/default/')" >> $GITHUB_ENV
+        echo "ENTITY_KIND=$(yq '.kind' ./catalog-info.yaml)" >> $GITHUB_ENV
+      shell: bash
+
     - name: Publish docs
       env: 
         AZURE_TENANT_ID: ${{ inputs.azure-tenant-id }}
@@ -71,6 +67,6 @@ runs:
         --publisher-type azureBlobStorage \
         --storage-name ${{ inputs.azure-container-name }} \
         --azureAccountName ${{ inputs.azure-storage-account-name }} \
-        --entity ${{ inputs.entity-namespace }}/${{ inputs.entity-kind }}/${{ inputs.entity-name }}
+        --entity $ENTITY_NAMESPACE/$ENTITY_KIND/$ENTITY_NAME
       shell: bash
 
