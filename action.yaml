@@ -44,6 +44,7 @@ runs:
       run: |
         pip install mkdocs-techdocs-core==1.*
         pip install mkdocs-kroki-plugin
+        pip install mkdocs-material==9.*
       shell: bash
 
     - name: Generate docs
