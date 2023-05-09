@@ -19,12 +19,35 @@ inputs:
   azure-client-secret:
     description: Client secret of the Azure storage account where the techdocs will be published
     required: true
+  is-child:
+    description: Whether this repo is the child repo
+    required: false
+    default: "false"
   pat:
     description: PAT for accessing the other repo
+    required: false
+  head-branch:
+    description: Name of the HEAD branch
+    required: false
+  parent-repo:
+    description: Name of the parent repo
     required: false
 runs:
   using: composite
   steps:
+    - name: Trigger Parent Event
+      if: inputs.is-child == 'true'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ inputs.pat }}
+        script: |
+          github.rest.actions.createWorkflowDispatch({
+            owner: 'beezlabs-org',
+            repo: '${{ inputs.parent-repo }}',
+            workflow_id: 'publish-docs.yaml',
+            ref: '${{ inputs.head-branch }}'
+          })
+
     - name: Checkout
       uses: actions/checkout@v3
       with:
