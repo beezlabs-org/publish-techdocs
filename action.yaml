@@ -54,9 +54,9 @@ runs:
 
     - name: Get Entity Information
       run: |
-        echo "ENTITY_NAME=$(yq '.metadata.name' ./catalog-info.yaml)" >> $GITHUB_ENV
-        echo "ENTITY_NAMESPACE=$(yq '.metadata.namespace' ./catalog-info.yaml | sed 's/^null$/default/')" >> $GITHUB_ENV
-        echo "ENTITY_KIND=$(yq '.kind' ./catalog-info.yaml)" >> $GITHUB_ENV
+        echo "ENTITY_NAME=$(yq 'select(di == 0).metadata.name' ./catalog-info.yaml)" >> $GITHUB_ENV
+        echo "ENTITY_NAMESPACE=$(yq 'select(di == 0).metadata.namespace' ./catalog-info.yaml | sed 's/^null$/default/')" >> $GITHUB_ENV
+        echo "ENTITY_KIND=$(yq 'select(di == 0).kind' ./catalog-info.yaml)" >> $GITHUB_ENV
       shell: bash
 
     - name: Publish docs
